@@ -1,0 +1,545 @@
+<div class="reveal">
+	<div class="slides">
+
+		<section>
+			<h1>ES6技术分享与实践</h1>
+			<h2>蔡能天</h2>
+		</section>
+
+		<!-- S 大纲 -->
+		<section>
+			<h2>大纲</h2>
+			<ul>
+				<li>ES6简介</li>
+				<ol>
+					<li>新特性</li>
+					<li>浏览器兼容情况</li>
+				</ol>
+				<li>语法糖</li>
+				<ol>
+					<li>let和const</li>
+					<li>解构</li>
+					<li>for...of</li>
+					<li>箭头函数</li>
+					<li>剩余变量、默认参数</li>
+				</ol>
+				<li>模板字符串和标签模板</li>
+				<li>Generator迭代器</li>
+				<li>类和模块</li>
+				<li>代码向后兼容</li>
+			</ul>
+		</section>
+		<!-- E 大纲 -->
+
+		<!-- S ES6简介 -->
+		<section>
+			<section data-transition="slide">
+				<h3>ES6简介</h3>
+				<p><a href="http://www.ecma-international.org/ecma-262/6.0/">ECMAScript 6</a>（简称ES6、又称ECMAScript 2015）是JavaScript语言的下一代标准，发布于2015年6月。</p>					
+			</section>
+			<section>
+				<h3>ES6新特性</h3>
+				<p>ES6带来了很多新的特性，帮助我们开发出更快更好的应用诸如：</p>
+				<ul class="fragment roll-in">
+					<li>语法糖</li>
+					<ul>
+						<li>let和const</li>
+						<li>解构</li>
+						<li>for...of</li>
+						<li>箭头函数</li>
+						<li>剩余变量、默认参数</li>
+					</ul>
+					<li>模板字符串和标签模板</li>
+					<li>Generator迭代器</li>
+					<li>类和模块</li>
+					<li>映射和集合</li>
+				</ul>
+			</section>
+			<section>
+				<h3>浏览器兼容情况</h3>
+				<p>各大浏览器的最新版本对ES6的支持可以查看<a href="http://kangax.github.io/compat-table/es6/">http://kangax.github.io/compat-table/es6/</a></p>
+				<p></p>
+			</section>			
+		</section>
+		<!-- E ES6简介 -->
+
+		<!-- S 语法糖 -->
+		<section>
+			<section data-transition="slide">
+				<h3>语法糖</h3>
+				<p>1、let和const</p>
+				<p>这两个关键词都允许我们在一个作用域中锁定一个变量，在作用域外无法被获取：let用于普通变量，const用于常量，一旦用const声明了就不能改变。</p>
+				<pre><code data-trim>
+// es5闭包
+function test(){
+  (function(){
+    var a = 1;
+  })();
+}
+console.log(a);  // undefined
+
+// es6
+function test(){
+  let a = 1;
+}
+console.log(a);  // undefined
+
+const PI = 3.1415926;
+PI = 2;
+console.log(PI);  // 3.1415926
+				</code></pre>
+			</section>
+			<section>
+				<p>2、解构</p>
+				<p>解构分为三种：<span data-fragment-index="1" class="fragment highlight-blue">数组解构、</span><span data-fragment-index="2" class="fragment highlight-blue">对象解构、</span><span data-fragment-index="3" class="fragment highlight-blue">字符串解构</span></p>
+				<pre data-fragment-index="1" class="fragment roll-in"><code data-trim>
+// 1、数组解构
+[x,y] = [y,x];  //x和y交换值，若是ES5交换：var x = 1, y = 2;y = [ x, x = y ][0];
+
+function test(){
+  return [1,2];
+}
+var [a,b] = test(); //从函数拿到多个返回值
+				</code></pre>
+				<pre data-fragment-index="2" class="fragment roll-in"><code data-trim>
+// 2、对象解构
+var data = {
+  device_id : 'JDCFD_01',
+  device_status : '可借',
+  device_borrowed : ['cainengtian','huangjianlun']
+};
+let { device_id, device_status, device_borrowed: borrowed } = data;
+console.log(device_id,device_status,borrowed);  // JDCFD_01,可借,['cainengtian','huangjianlun']					
+				</code></pre>
+				<pre data-fragment-index="3" class="fragment roll-in"><code data-trim>
+// 3、字符串解构
+let { a, b } = 'hi';
+console.log(a,b);  // h,i
+let {len:length} = 'hello';
+console.log(len);  //5					
+				</code></pre>
+			</section>
+			<section>
+				<p>3、for...of</p>
+				<p>与ES5的for...in‘迭代键’不同，for...of用来‘迭代值’</p>
+				<pre><code data-trim>
+var data = {
+  device_id : 'JDCFD_01',
+  device_status : '可借'
+};
+var i;
+for ( i of data ){
+  console.log(i); // JDCFD_01,可借
+}
+				</code></pre>
+			</section>
+			<section>
+				<p>4、箭头函数</p>
+				<p>顾名思义，箭头函数就是包含了箭头（‘=>’）的函数，除了语法简洁以外，还解决了长期以来‘this’的指向问题。</p>
+				<pre><code data-trim>
+// ES5
+var squart = function( a ){
+  return a*a;
+}
+// ES6
+var squart = a => a*a;
+
+// ES5
+var meishi = {
+  url: 'http://opr.paipai.com/mypp/gettagitem?charset=gbk',
+  init : function(){
+    var self = this;
+    document.addEventListener('click', function( ev ){
+      self.getData(ev);
+    }, false);  // 这里的this绑定了meishi这个对象，而不是运行时的init方法
+  },
+  getData : function( ev ){
+    ...
+  }
+}					
+//ES 6
+var meishi = {
+  url: 'http://opr.paipai.com/mypp/gettagitem?charset=gbk',
+  init : function(){
+    document.addEventListener('click', ev => this.getData(ev), false);  // 这里的this绑定了meishi这个对象，而不是运行时的init方法
+  },
+  getData : function( ev ){
+    ...
+  }
+}					
+				</code></pre>
+			</section>
+			<section>
+				<p>5、剩余变量、默认参数</p>
+				<pre><code data-trim="">
+// 实现不定参数的求和
+function getSum(){
+  var sum = 0;
+  for ( var i = 0 , len = arguments.length; i &lt; len; i++ ){
+    sum += arguments[i];
+  }
+  return sum;
+}
+let sum1 = getSum(1,2,3,4);
+console.log( sum1 );  //10
+
+// 默认参数
+function sayHello( name ) {
+  name = name || 'world';
+  console.log('hello ' + name);
+}
+				</code></pre>
+			  <pre class="fragment roll-in"><code data-trim="">
+function getSum(...arr){ //这里的arr相当于arguments，但是arr是一个真正的数组
+  let sum = 0;
+  for ( var i of arr ){
+    sum += i;
+  }
+  return sum;
+}
+
+// 默认参数
+function sayHello( name = 'world' ){
+  console.log('hello ' + name);
+}
+			  </code></pre>
+			</section>
+		</section>
+		<!-- E 语法糖 -->
+
+		<!-- S 模版插值 -->
+		<section>
+			<section data-transition="slide">
+				<h3>模版字符串和标签模版</h3>
+				<p>需求：拿到接口返回的数据进行模版替换</p>
+				<p>1. 最原始的方法</p>
+				<pre><code data-trim contenteditable>				
+$('#result').html(
+  '&lt;div class="nav grid_c1">' + 
+    '&lt;p>' + result.num + '&lt;/p>' +
+  '&lt;/div>'
+)					
+				</code></pre>
+				<p>2. 自己封装一个模版替换函数如下：</p>
+		   	<pre><code data-trim contenteditable>
+function replaceHTML (tpl, data){
+  return tpl.replace(/{([\w\-]+\}/g,function(match, key){
+    return typeof data[key] !== 'undefined' ? data[key] : '';	
+  });
+}				   		
+		   	</code></pre>
+			</section>
+			<section data-transition="slide">
+				<h3>模板字符串</h3>
+				<pre><code data-trim>
+$('#result').html(
+  `&lt;div class="nav grid_c1"> 
+    &lt;p>${result.num}&lt;/p>
+  &lt;/div>`
+)					
+				</code></pre>
+				<ul>
+					<li>1. 模版字符串用反引号(`)来标识，支持多行字符串</li>
+					<li>2. 模版字符串需要替换的变量需要写在${}之中</li>
+				</ul>
+			</section>
+			<section data-transition="slide">
+				<h3>标签模版</h3>
+				<p>模板字符串除了用来替换变量之外，还可以紧跟在一个函数名后面，该函数将调用来处理这个字符串，这就是‘标签模版’功能。</p>
+				<pre><code data-trim>
+let a = 1,
+    b = 2;
+say`hello ${ a + b } world ${ a * b }`;
+function say( arr,...values ){
+	console.dir(arr,...values); // ['hello','world'],3,2
+}
+				</code></pre>
+				<p>从上面代码来看，模版字符串前面是一个函数，它负责处理字符串然后返回值。该函数第一个参数是一个数组，后面的其它参数都是模版字符串各个变量被替换后的值。</p>
+			</section>
+		</section>
+		<!-- E 模版插值 -->
+
+		<!-- S Generator迭代器 -->
+		<section>
+			<section data-transition="slide">
+				<h3>Generator迭代器</h3>
+				<p>需求：实现一个取号机程序(每个人按一下取号机按钮出一张纸条1号，后面的人按一下出一张纸条2号，以此类推)</p>
+				<pre class="fragment roll-in"><code data-trim>
+function Ticket(){
+  var i = 1;
+  return {
+    next : function( next ){
+      return i++;
+    }
+  }
+}
+var ticket = new Ticket();
+ticket.next(); // 1
+ticket.next(); // 2
+				</code></pre>
+			</section>
+			<section data-transiton="slide">
+				<p>在上面的函数中，为了保持i能够递增，引入了闭包机制。ES6引入了generator迭代器，上面函数可用下面代码替换：</p>
+				<pre><code data-trim>
+function* Ticket(){
+  var i = 1;
+  while( true ){
+    yield i;
+    i++;
+  }
+}
+var ticket = new Ticket();
+ticket.next();  // 1
+ticket.next();  // 2					
+				</code></pre>
+				<p>Generator跟普通函数的区别在于函数名前面多了一个*号，而且提供yield关键字起到暂停的作用，yield后面的值会在下一次运行的时候被计算。</p>
+			</section>
+			<section>
+				<p>Generator函数真正的作用是用来解决‘回调金字塔’问题，Ajax的异步回调代码我们非常熟悉，如下示例：</p>
+				<pre><code data-trim>
+// 假设这里已经引入了jQuery
+// 第一层ajax请求
+$.ajax({
+  url : 'http://focus.paipai.com/itemeval/getvallist?itemid=' + self.itemIds.join('|'),
+  type : 'GET',
+  dataType : 'jsonp',
+  success : function ( data ){
+    // 第二层ajax请求
+    $.ajax({
+      url : 'http://focus.paipai.com/itemeval/getvalitem?itemid=' + data.itemid,
+      type : 'GET',
+      dataType : 'jsonp',
+      success : function( data1 ){
+        // 第三层ajax回调
+        $.ajax({
+          ...
+        })
+      }
+    })
+  }
+})					
+				</code></pre>				
+			</section>
+			<section data-transiton="slide">
+				<p>当然我们基本不会写出上面这种层层回调的代码，毕竟还有<a href="https://github.com/caolan/async/">async</a>这一类的库，但是ES6的Generator让我们处理这种问题更加顺手。</p>				
+				<pre><code data-trim>
+function run( generatorFunc ){
+  var generatorltr = generatorFunc( resume );
+  function resume( callbackValue ){
+    generatorlrt.next( callbackValue );
+  }
+  generatorltr.next();
+}					
+run(function* getAjax( resume ){
+  yield $.ajax({...});
+  yield $.ajax({...});
+  yield $.ajax({...});
+	...
+})
+				</code></pre>
+				<p>上面函数发生了什么事？</p>
+				<ul>
+					<li class="fragment roll-in">run函数接收了一个generator并创建了一个resume函数</li>
+					<li class="fragment roll-in">run创建了一个generator迭代器对象并且调用next()方法，提供resume函数用来推动generator函数往前运行</li>
+					<li class="fragment roll-in">每次ajax运行之后都会碰到yield暂停执行，resume推进generator，直到没有yield的调用</li>
+				</ul>
+			</section>
+		</section>
+		<!-- E Generator迭代器 -->
+
+		<!-- S 类和模块 -->
+		<section>
+			<section data-transition="slide">
+				<h3>类和模块</h3>
+				<div style="position:relative;">
+					<p class="fragment fade-out" data-fragment-index="3">JavaScript语法没有‘类’的概念，但在面向对象编程过程中频繁需要使用到‘类’，所以我们常常利用<em data-fragment-index="1" class="fragment highlight-blue">构造函数方法</em>或者ES5提出的<em data-fragment-index="2" class="fragment highlight-blue">Object.create()法</em>来实现‘类’。</p>
+					<p style="position:absolute;top:0px;" class="fragment fade-in" data-fragment-index="3">下面两种方法比较：构造函数法相对复杂，对于初学者比较难以理解；Object.create()法不能实现私有属性和私有方法，实例对象之间也不能共享数据。</p>				
+				</div>
+				
+				<pre class="fragment roll-in" data-fragment-index="1"><code data-trim>
+	// 构造函数法
+	function Person( name,age ){
+	  this.name = name;
+	  this.age = age;
+	}
+	Person.prototype.printInfo = function(){
+	  console.log(this.name, this.age);
+	}
+
+	var person = new Person('sky',24);
+	person.printInfo();  // sky,24
+				</code></pre>
+				<pre class="fragment roll-in" data-fragment-index="2"><code data-trim>
+	// Object.create()法
+	var Person = {
+	  name : 'sky',
+	  age : 24,
+	  printInfo : function(){
+	    console.log(this.name, this.age);
+	  }
+	}				
+	//用Object.create()生成实例，不需要new
+	var person = Object.create( Person );
+	person.printInfo();
+				</code></pre>
+			</section>
+			<section data-transition="slide">
+				<p>ES6提供了跟传统面向对象语言（如：C++、Java）靠近的写法，引入Class（类）这个概念，上面的例子改写成ES6的‘类’如下：</p>
+				<pre><code data-trim>
+// 定义类
+class Person {
+  // Person类的构造方法，必须要有，如果不写会默认添加一个空的构造方法：contructor(){}
+  contructor( name, age ){
+    this.name = name;
+    this.age = age;
+  }
+
+  // ‘类’方法，前面不需要加function关键字
+  printInfo(){
+    console.log( this.name, this.age )
+  }
+}
+
+// 实例化
+var person = new Person( 'sky',24 );
+person.printInfo();  // sky,24
+				</code></pre>
+			</section>
+			<section data-transition="slide">
+				<h3>继承</h3>
+				<p>ES6通过extends关键词来实现继承，比ES5的通过修改原型链继承更加清晰和方便。</p>
+				<pre><code data-trim>
+class Man extends Person {
+  constructor( name,age,sex ){
+    super( name, age );  // 调用父类Person的constructor(name,age)
+    this.sex = sex;
+  }
+
+  printInfo(){
+    console.log(super.printInfo() + this.sex); //调用父类Person的printInfo()
+  }
+}
+				</code></pre>
+			</section>
+			<section data-transition="slide">
+				<h3>模块</h3>
+				<p>随着JavaScript项目越来越大，我们就必须考虑模块化，其实在ES6之前也有了模块加载方案，最主要的有CommonJS和AMD两种。前者用于服务器，后者用于浏览器。Node的模块就是基于CommonJS的，而AMD最典型的就是RequierJS。</p>
+				<p>ES6的类只是面向对象编程的语法糖，并没有实现模块化，所以ES6单独实现了Module。</p>
+				<pre><code data-trim>
+// main.js					
+class Person {
+  // Person类的构造方法，必须要有，如果不写会默认添加一个空的构造方法：contructor(){}
+  contructor( name, age ){
+    this.name = name;
+    this.age = age;
+  }
+
+  // ‘类’方法，前面不需要加function关键字
+  printInfo(){
+    console.log( this.name, this.age )
+  }
+}
+export {Person};  // 或者 module.export = Person;
+				</code></pre>
+				<pre><code data-trim>
+// entry.js
+//假设main.js和entry.js放在同一个目录下面
+import {Person} from './main';   // 或者 let Person = require('./main');
+let person = new Person('sky',24);
+person.printInfo();  // sky, 24
+				</code></pre>
+			</section>
+		</section>
+		<!-- E 类和模块 -->
+
+		<!-- S 代码向后兼容 -->
+		<section>
+			<section data-transition="slide">
+				<h3>代码向后兼容</h3>
+				<p>由于目前浏览器并没有完全支持ES6的新特性，所以为了现在就能使用，我们需要一些转换器来转换成ES5的代码。</p>
+				<p>目前比较主流的代码转换有<a href="https://babeljs.io/">Babel</a>、Traceur等。这里介绍Babel，主要因为它对ES6的支持程度相对较高，而且文档完善。</p>
+				<pre class="fragment roll-in"><code data-trim>
+// 假设script.js文件里面的内容如下：
+class Person {
+  contructor(name, age) {
+    this.name = name;
+    this.age = age;
+  }
+
+  showInfo() {
+    return 'hello ' + this.name + ',you are ' + this.age + ' year"s old';
+  }
+}
+
+var person = new Person();
+person.showInfo();
+				</code></pre>
+			</section>
+			<section data-transition="slide">
+				<pre><code data-trim>
+npm i -g babel -d  // 全局安装babel
+babel -d ./build/ script.js  //将script.js文件转换成ES5语法文件输出到build文件夹里面
+				</code></pre>
+				<!--<img class="fragment roll-in" src="http://cnt1992.sinaapp.com/static/images/es6_babel.jpg" alt="">-->
+			</section>
+		</section>
+		<!-- E 代码向后兼容 -->
+
+		<!-- S ES6学习资料 -->
+		<section>
+			<h3>ES6学习资料整理</h3>
+			<ul>
+				<li><a href="http://es6katas.org/">http://es6katas.org/</a></li>
+				<li><a href="http://es6-features.org/">http://es6-features.org/</a></li>
+				<li><a href="https://leanpub.com/understandinges6/read">https://leanpub.com/understandinges6/read</a></li>
+				<li><a href="http://es6.ruanyifeng.com/">http://es6.ruanyifeng.com/</a></li>
+				<li><a href="http://kangax.github.io/compat-table/es6/">http://kangax.github.io/compat-table/es6/</a></li>
+				<li><a href="https://github.com/paulmillr/es6-shim">https://github.com/paulmillr/es6-shim</a></li>
+				<li><a href="https://github.com/lukehoban/es6features">https://github.com/lukehoban/es6features（英）</a></li>
+				<li><a href="https://github.com/ES-CN/es6features">https://github.com/ES-CN/es6features（中）</a></li>
+				<li><a href="https://github.com/addyosmani/es6-tools">https://github.com/addyosmani/es6-tools（英）</a></li>
+				<li><a href="https://github.com/ES-CN/es6-tools">https://github.com/ES-CN/es6-tools（中）</a></li>
+				<li><a href="https://github.com/addyosmani/es6-equivalents-in-es5">https://github.com/addyosmani/es6-equivalents-in-es5</a></li>
+				<li><a href="http://www.es6fiddle.net/">http://www.es6fiddle.net/</a></li>
+				<li><a href="https://hacks.mozilla.org/category/es6-in-depth/">https://hacks.mozilla.org/category/es6-in-depth/</a></li>
+				<li><a href="http://ruanyf.github.io/es-checker/">http://ruanyf.github.io/es-checker/</a></li>
+			</ul>
+		</section>
+		<!-- E ES6学习资料 -->
+
+		<!-- S Promise对象 -->
+		<!-- <section>
+			<section data-transition="slide">
+				<h3>Promise对象</h3>
+				<p>摘自MDN：Promise对象用来进行延迟（deferred）和异步（asynchronous）计算。一个Promise处于以下四种状态之一：</p>
+				<ul>
+					<li>pending：初始状态，非fulfilled或rejected</li>
+					<li>fuifilled：成功的操作</li>
+					<li>rejected：失败的操作</li>
+					<li>settled：Promise已被fulfilled或rejected，且不是pending</li>
+				</ul>
+				<img src="http://cnt1992.sinaapp.com/static/images/promise_road.jpg" alt="" />
+				<p>当然在ES6之前，已经有很多第三方库实现了Promise的功能：<a href="https://github.com/kriskowal/q">Q</a>、<a href="https://github.com/cujojs/when">when</a></p>
+			</section>
+			<section data-transition="slide">
+				
+			</section>		
+		</section> -->
+
+		<!-- E Promise对象 -->
+		
+
+		<!-- S 感谢 -->
+		<section>
+			<h2>Thank You!</h2>
+		</section>
+		<!-- E 感谢 -->
+
+
+	</div>
+</div>
+
+
+
+
+

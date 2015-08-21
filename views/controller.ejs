@@ -1,0 +1,113 @@
+<div class="wrapper">
+	<h4>远程控制器</h4>
+	<div id="J_controller">
+		<ul class="ctl_list">
+			<li><a href="javascript:;" class="ctl_btn" data-cmd="up">上</a></li>
+			<li><a href="javascript:;" class="ctl_btn" data-cmd="down">右</a></li>
+			<li><a href="javascript:;" class="ctl_btn" data-cmd="left">左</a></li>
+			<li><a href="javascript:;" class="ctl_btn" data-cmd="right">下</a></li>
+		</ul>
+
+        <ul class="ctl_more">
+            <li><a href="javascript:;" class="ctl_more_btn" data-cmd="next">继续</a></li>
+        </ul>
+	</div>
+</div>
+
+
+<script src="lib/js/head.min.js"></script>
+<script>
+
+	head.js( '/js/jquery-1.7.2.min.js' ,'/socket.io/socket.io.js' , function() {
+
+        function getQueryString(name) {
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+            var r = window.location.search.substr(1).match(reg);
+            if (r != null) return unescape(r[2]); return null;
+        }
+		
+		// connect
+        var socket = io.connect('/');
+		
+		socket.on('connect', function () {
+            console.log("控制器连接成功.");
+            var whichppt = getQueryString('presentation');
+
+            $('#J_controller').on( 'click', '.ctl_btn', function(ev){
+                ev.preventDefault();
+                var $this = $(this);
+                if ( $this.hasClass('disabled') ){
+                    return ;
+                }
+                var cmd = $this.data('cmd');
+                socket.emit('command', {'id' : whichppt, 'txt': cmd } );
+                
+            });
+
+            socket.on('updateAvailableRoutes', function(availableRoutes){
+
+                availableRoutes.up = availableRoutes.up || availableRoutes.prev;
+                availableRoutes.down = availableRoutes.down || availableRoutes.next;
+
+                for( var i in availableRoutes ){
+                    var _class = availableRoutes[ i ] === true ? '' : 'disabled';
+                    $('#J_controller [data-cmd=' + i + ']').removeClass('disabled').addClass( _class );
+                }
+            });
+
+            initDeviceMotion();
+
+            function initDeviceMotion () {
+            	if ( window.DeviceMotionEvent ) {
+            		window.addEventListener( 'devicemotion', deviceMotionHandle, false );
+
+            	} else {
+            		alert('不支持deviceMotion事件咯');
+            	}
+            }
+
+            var SHAKE_THRESOLD = 100;
+            var flag = true;
+            var last_update = 0;
+            var x,y,z,last_x = 0,last_y = 0,last_z = 0;
+
+            function deviceMotionHandle( eventData ) {
+            	// 获取含重力的加速度
+            	var acceleration = eventData.accelerationIncludingGravity;
+
+            	// 获取当前时间
+            	var curTime = new Date().getTime();
+            	var diffTime = curTime - last_update;
+
+            	if ( diffTime > 1000 ) {
+            		last_update = curTime;
+
+            		x = acceleration.x;
+            		y = acceleration.y;
+            		z = acceleration.z;
+
+            		var speed = Math.abs( x + y + z - last_x - last_y - last_z )/diffTime * 10000;
+            		//alert(speed)
+
+                    $('body').append('<p>' + speed + '</p>');
+
+            		if ( speed > SHAKE_THRESOLD && flag ) {
+                        flag = false;
+            			//alert('你已经摇动了')
+                        socket.emit('command', {'id' : whichppt, 'txt': 'next' } );
+            		}
+
+            		last_x = x;
+            		last_y = y;
+            		last_z = z;
+            	}
+
+            }
+
+
+
+        }); 
+		
+	} );
+	
+</script>
