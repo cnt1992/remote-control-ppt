@@ -1,4 +1,22 @@
-<div class="reveal">
+<!doctype html>   
+<html lang="zh-CN"> 
+	<head> 
+		<meta charset="utf-8"> 
+		<title>ECMA6 技术分享</title> 
+		<meta name="apple-mobile-web-app-capable" content="yes" /> 
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" /> 	
+		<link rel="stylesheet" href="public/css/reveal.css" media="screen" /> 
+ 
+		<!-- 主题样式 --> 
+		<link rel="stylesheet" href="public/css/theme_jdc.css" media="screen" /> 
+ 		
+ 
+		<!-- 代码高亮样式 --> 
+		<link rel="stylesheet" href="public/lib/css/zenburn.css"> 
+	</head> 
+	<body> 
+	 
+		<div class="reveal">
 	<div class="slides">
 
 		<section>
@@ -543,3 +561,130 @@ babel -d ./build/ script.js  //将script.js文件转换成ES5语法文件输出�
 
 
 
+ 
+	 
+<script src="public/lib/js/head.min.js"></script> 
+<script> 
+	// Load the main reveal.js script 
+	head.js( 'public/js/reveal.js', function() { 
+		// Parse the query string into a key/value object 
+		var query = {}; 
+ 
+		location.search.replace( /[A-Z0-9]+?=(\w*)/gi, function(a) { 
+			query[ a.split( '=' ).shift() ] = a.split( '=' ).pop(); 
+		} ); 
+ 
+		// Fires when a slide with data-state=customevent is activated 
+		Reveal.addEventListener( 'customevent', function() { 
+			console.log( '"customevent" has fired' ); 
+		} ); 
+ 
+		// Fires each time a new slide is activated 
+		Reveal.addEventListener( 'slidechanged', function( event ) { 
+			// event.previousSlide, event.currentSlide, event.indexh, event.indexv 
+		} ); 
+ 
+		Reveal.initialize({ 
+			// Display controls in the bottom right corner 
+			controls: false, 
+ 
+			// Display a presentation progress bar 
+			progress: false, 
+ 
+			// If true; each slide will be pushed to the browser history 
+			history: true, 
+ 
+			// Loops the presentation, defaults to false 
+			loop: false, 
+ 
+			// Flags if mouse wheel navigation should be enabled 
+			mouseWheel: false, 
+ 
+			// Apply a 3D roll to links on hover 
+			rollingLinks: false, 
+ 
+			slideNumber: false, 
+ 
+			// Transition style 
+			transition: query.transition || 'default' // default/cube/page/concave/linear(2d) 
+		}); 
+	}); 
+	 
+	// Load third party scripts 
+	head.js( 'public/lib/js/classList.js' ); 
+	head.js( 'public/lib/js/highlight.js', function() { 
+		// Fire off syntax highlighting for potential code samples in the slides 
+		hljs.initHighlightingOnLoad(); 
+	} ); 
+			 
+	// map the url to the presentation id 
+	var pathNameArr = window.location.pathname.split("/"); 
+	if(pathNameArr.length > 1) { 
+		presentation_id = pathNameArr[1]; 
+	} 
+ 
+ 
+	head.js( '/socket.io/socket.io.js' , function() { 
+		 
+		// connect 
+		var socket = io.connect('/'); 
+		 
+		socket.on('connect', function () { 
+ 
+            // 浏览器关闭发送ppt断开链接指令 
+            window.onbeforeunload = function( e ){ 
+                socket.emit('ppt_disconnect',{id:presentation_id}); 
+            }; 
+ 
+			console.log("PPT端连接成功，发送当前请求"); 
+ 
+            var availableRoutes = Reveal.availableRoutes();  // { left:true,right:true,up:true,down:false } 
+            socket.emit( 'availableRoutes', availableRoutes ); 
+ 
+			// on connect send presentation request 
+			socket.emit('request_presentation', {'id': presentation_id}); 
+			 
+			socket.on('updatedata', function(data) { 
+				console.log("接收更新数据: " + JSON.stringify(data) ); 
+ 
+                if ( data.id !== presentation_id ){ 
+                    return; 
+                } 
+ 
+                switch ( data.txt ){ 
+                    case 'left' : 
+                        Reveal.left(); 
+                        break; 
+                    case 'right' : 
+                        Reveal.right(); 
+                        break; 
+                    case 'up' : 
+                        Reveal.up(); 
+                        break; 
+                    case 'down' : 
+                        Reveal.down(); 
+                        break; 
+                    case 'next' : 
+                        Reveal.next(); 
+                        break; 
+                } 
+ 
+                var availableRoutes = Reveal.availableRoutes();  // { left:true,right:true,up:true,down:false } 
+                var availableFragments =  Reveal.availableFragments(); // { prev:true,next:true } 
+ 
+                // 合并对象 
+                for( var i in availableFragments ) { 
+                    availableRoutes[ i ] = availableFragments[ i ]; 
+                } 
+ 
+                socket.emit( 'availableRoutes', availableRoutes ); 
+			}); 
+		}); 
+	}); 
+	 
+</script> 
+	 
+	 
+	</body> 
+</html> 
+ 
